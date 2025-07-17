@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GamingKings - Centro de Recargas</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <a href="index.html" class="logo-link">
+                <img src="images/gamingkings_logo.png" alt="GamingKings Logo" class="logo-img">
+            </a>
+        </div>
+        <div class="header-right">
+            <div class="search-bar">
+                <input type="text" placeholder="Buscar juego...">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="custom-currency-selector" id="custom-currency-selector">
+                <div class="selected-currency" id="selected-currency">
+                    <img src="images/flag_ve.png" alt="Venezuela Flag"> <span>Bs. (VES)</span> <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="currency-options" id="currency-options">
+                    <div class="option" data-value="VES">
+                        <img src="images/flag_ve.png" alt="Venezuela Flag"> <span>Bs. (VES)</span>
+                    </div>
+                    <div class="option" data-value="USD">
+                        <img src="images/flag_us.png" alt="USA Flag"> <span>$ (USD)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="home-main">
+        <h1>¡RECARGA TUS JUEGOS FAVORITOS!</h1>
+        <div class="game-grid" id="game-grid">
+            <a href="freefire.html" class="game-card" data-game-id="freefire" data-min-price-usd="1.20">
+                <img src="images/freefire_cover.jpg" alt="Free Fire">
+                <h2>Free Fire</h2>
+                <div class="stars">★★★★★</div>
+                <p class="min-price"></p> </a>
+            <a href="#" class="game-card" data-game-id="mobilelegends" data-min-price-usd="2.50">
+                <img src="images/mobile_legends_cover.jpg" alt="Mobile Legends">
+                <h2>Mobile Legends</h2>
+                <div class="stars">★★★★★</div>
+                <p class="min-price"></p>
+            </a>
+            <a href="#" class="game-card" data-game-id="bloodstrike" data-min-price-usd="0.99">
+                <img src="images/bloodstrike_cover.jpg" alt="Blood Strike">
+                <h2>Blood Strike</h2>
+                <div class="stars">★★★★★</div>
+                <p class="min-price"></p>
+            </a>
+            <a href="#" class="game-card" data-game-id="pubgmobile" data-min-price-usd="1.00">
+                <img src="images/pubg_mobile_cover.jpg" alt="PUBG Mobile">
+                <h2>PUBG Mobile</h2>
+                <div class="stars">★★★★★</div>
+                <p class="min-price"></p>
+            </a>
+            <a href="#" class="game-card" data-game-id="arenabreakout" data-min-price-usd="3.00">
+                <img src="images/arena_breakout_cover.jpg" alt="Arena Breakout">
+                <h2>Arena Breakout</h2>
+                <div class="stars">★★★★★</div>
+                <p class="min-price"></p>
+            </a>
+            </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 GamingKings. Todos los derechos reservados.</p>
+            <div class="footer-links">
+                <a href="privacy.html">Políticas de Privacidad</a>
+                <a href="terms.html">Términos de Servicio</a>
+            </div>
+            <a href="https://wa.me/584127123391" target="_blank" class="whatsapp-link">
+                <i class="fab fa-whatsapp"></i> Contáctanos por WhatsApp
+            </a>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const gameCards = document.querySelectorAll('.game-card');
+            const DOLLAR_RATE = 116.82; // Tasa de dólar simulada
+
+            function formatPrice(price, currency) {
+                if (currency === 'VES') {
+                    return `Bs. ${price.toFixed(2)}`;
+                } else {
+                    return `$${price.toFixed(2)}`;
+                }
+            }
+
+            // Función para actualizar los precios mínimos en las tarjetas de juego
+            function updateGameMinPrices(currentCurrency) {
+                gameCards.forEach(card => {
+                    const minPriceUSD = parseFloat(card.dataset.minPriceUsd);
+                    const minPriceElement = card.querySelector('.min-price');
+                    let displayPrice;
+
+                    if (currentCurrency === 'VES') {
+                        displayPrice = minPriceUSD * DOLLAR_RATE;
+                    } else {
+                        displayPrice = minPriceUSD;
+                    }
+                    minPriceElement.textContent = `Desde ${formatPrice(displayPrice, currentCurrency)}`;
+                });
+            }
+
+            // Llama a la función al cargar la página con la moneda guardada
+            const initialCurrency = localStorage.getItem('selectedCurrency') || 'VES';
+            updateGameMinPrices(initialCurrency);
+
+            // Escucha el evento de cambio de moneda (disparado desde script.js)
+            window.addEventListener('currencyChanged', (event) => {
+                const newCurrency = event.detail.currency;
+                updateGameMinPrices(newCurrency);
+            });
+        });
+    </script>
+</body>
+</html>

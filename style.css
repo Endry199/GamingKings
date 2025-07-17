@@ -1,0 +1,702 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+:root {
+    --primary-bg: #221a30; /* Fondo principal oscuro */
+    --secondary-bg: #302640; /* Fondo de tarjetas o secciones */
+    --accent-purple: #8a2be2; /* Púrpura vibrante para acentos */
+    --text-color: #f0f0f0; /* Color de texto claro */
+    --border-color: #554477; /* Color de borde sutil */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+}
+
+body {
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+/* Header */
+header {
+    background-color: var(--secondary-bg);
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* CAMBIO 2: Estilos para el logo de imagen */
+.logo-link {
+    display: inline-block;
+    height: 50px; /* Altura del contenedor para el logo */
+    line-height: 0; /* Elimina espacio extra */
+}
+
+.logo-img {
+    height: 75px; /* Altura deseada para tu logo */
+    width: auto; /* Mantiene la proporción */
+    max-width: 400px; /* Ancho máximo, ajusta si es necesario */
+    display: block; /* Elimina espacio extra debajo */
+    object-fit: contain;
+}
+
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.search-bar {
+    position: relative;
+}
+
+.search-bar input {
+    background-color: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 8px 15px 8px 40px; /* Espacio para el icono */
+    color: var(--text-color);
+    font-size: 1em;
+    outline: none;
+    transition: all 0.3s ease;
+    width: 200px; /* Ajusta el ancho si es necesario */
+}
+
+.search-bar input::placeholder {
+    color: #bbb;
+}
+
+.search-bar input:focus {
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 5px rgba(138, 43, 226, 0.5);
+}
+
+.search-bar .fas.fa-search {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #bbb;
+}
+
+/* CAMBIO 1: Selector de moneda CUSTOM */
+.custom-currency-selector {
+    position: relative;
+    width: 150px; /* Ancho ajustable */
+    cursor: pointer;
+    background-color: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 8px 15px;
+    font-size: 1em;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.custom-currency-selector:hover {
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 5px rgba(138, 43, 226, 0.5);
+}
+
+.selected-currency {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-color);
+    padding-right: 5px;
+}
+
+.selected-currency img {
+    width: 24px;
+    height: auto;
+    margin-right: 8px;
+    border-radius: 3px;
+}
+
+.selected-currency .fas.fa-chevron-down {
+    transition: transform 0.3s ease;
+}
+
+.custom-currency-selector.open .selected-currency .fas.fa-chevron-down {
+    transform: rotate(180deg);
+}
+
+.currency-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    padding: 5px 0;
+}
+
+.custom-currency-selector.open .currency-options {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.currency-options .option {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    color: var(--text-color);
+    transition: background-color 0.2s ease;
+}
+
+.currency-options .option:hover {
+    background-color: rgba(138, 43, 226, 0.2);
+}
+
+.currency-options .option img {
+    width: 24px;
+    height: auto;
+    margin-right: 8px;
+    border-radius: 3px;
+}
+
+
+/* Main Content - Home Page */
+.home-main {
+    text-align: center;
+    padding: 50px 20px;
+}
+
+.home-main h1 {
+    color: var(--accent-purple);
+    font-size: 2.5em;
+    margin-bottom: 40px;
+}
+
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    align-items: stretch; /* Asegura que las tarjetas se estiren verticalmente */
+}
+
+.game-card {
+    background-color: var(--secondary-bg);
+    border-radius: 15px;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex; /* Asegúrate de que sea flex */
+    flex-direction: column; /* Apila los elementos verticalmente */
+    align-items: stretch; /* Haz que los elementos internos se estiren horizontalmente */
+    padding-bottom: 15px;
+    position: relative; /* Necesario para posicionar el precio mínimo */
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.game-card img {
+    width: 100%;
+    height: 180px; 
+    object-fit: cover;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0; /* Evita que la imagen se encoja demasiado */
+}
+
+.game-card h2 {
+    font-size: 1.5em;
+    margin: 15px 0 5px;
+    color: var(--accent-purple);
+    flex-grow: 1; /* Permite que el texto crezca y empuje elementos */
+    display: flex; /* Añadido para centrado vertical y horizontal */
+    align-items: center; /* Centra el texto verticalmente si es necesario */
+    justify-content: center; /* Centra el texto horizontalmente si es necesario */
+    padding: 15px; /* Asegura espacio alrededor del título */
+}
+
+.game-card .stars {
+    color: gold;
+    font-size: 1.2em;
+    padding: 0 10px; /* Añade un poco de espacio a los lados */
+}
+
+/* CAMBIO 3: Estilo para el precio mínimo en las tarjetas de juego */
+.game-card .min-price {
+    font-size: 0.9em;
+    color: #bbb;
+    margin-top: 5px;
+    font-weight: bold;
+    text-align: center;
+    width: 100%;
+    padding: 0 10px; /* Añade un poco de espacio a los lados */
+}
+
+
+/* Footer */
+footer {
+    background-color: var(--secondary-bg);
+    padding: 20px 30px;
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+    margin-top: 50px;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+footer p {
+    margin-bottom: 15px;
+    font-size: 0.9em;
+    color: #bbb;
+}
+
+.footer-links a {
+    color: #bbb;
+    text-decoration: none;
+    margin: 0 15px;
+    transition: color 0.3s ease;
+    font-size: 0.9em;
+}
+
+.footer-links a:hover {
+    color: var(--accent-purple);
+}
+
+.whatsapp-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #25D366; /* Color de WhatsApp */
+    text-decoration: none;
+    font-weight: bold;
+    margin-top: 15px;
+    font-size: 1em;
+    transition: opacity 0.3s ease;
+}
+
+.whatsapp-link:hover {
+    opacity: 0.8;
+}
+
+.whatsapp-link .fab.fa-whatsapp {
+    font-size: 1.2em;
+}
+
+/* General Form & Card Styles (used across pages) */
+.form-container, .info-card {
+    background-color: var(--secondary-bg);
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 600px;
+    margin: 50px auto;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.form-container h2, .info-card h2 {
+    color: var(--accent-purple);
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 2em;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    background-color: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-color);
+    font-size: 1em;
+    outline: none;
+    margin-bottom: 20px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 5px rgba(138, 43, 226, 0.5);
+}
+
+.form-group input::placeholder {
+    color: #bbb;
+}
+
+.package-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.package-item {
+    background-color: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1em;
+}
+
+.package-item:hover, .package-item.selected {
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+}
+
+.package-item.selected {
+    background-color: rgba(138, 43, 226, 0.2);
+}
+
+.package-item .price {
+    font-weight: bold;
+    color: var(--accent-purple);
+}
+
+.btn-primary {
+    background-color: var(--accent-purple);
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: 100%;
+}
+
+.btn-primary:hover {
+    background-color: #7a1ee0;
+    transform: translateY(-2px);
+}
+
+.btn-primary:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Payment Method Selection */
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.payment-method-option {
+    display: flex;
+    align-items: center;
+    background-color: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.payment-method-option:hover {
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+}
+
+.payment-method-option input[type="radio"] {
+    margin-right: 15px;
+    accent-color: var(--accent-purple);
+    transform: scale(1.3);
+}
+
+.payment-method-option label {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.payment-method-option img {
+    height: 30px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Payment Details Page */
+.payment-details-main {
+    padding: 50px 20px;
+    text-align: center;
+}
+
+.payment-details-card {
+    background-color: var(--secondary-bg);
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 600px;
+    margin: 0 auto;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.payment-details-card h2 {
+    color: var(--accent-purple);
+    margin-bottom: 25px;
+}
+
+.payment-details-card p {
+    font-size: 1.1em;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.payment-details-card strong {
+    color: var(--accent-purple);
+}
+
+.payment-instructions {
+    background-color: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.payment-instructions p {
+    margin-bottom: 10px;
+    font-size: 1em;
+}
+
+.payment-instructions code {
+    background-color: rgba(138, 43, 226, 0.1);
+    border-radius: 5px;
+    padding: 2px 6px;
+    font-family: 'Courier New', Courier, monospace;
+    color: var(--accent-purple);
+    font-weight: bold;
+    display: inline-block; /* Para asegurar el padding y el fondo */
+    word-break: break-all; /* Para romper texto largo en dispositivos pequeños */
+}
+
+/* Specific styles for game recharge pages */
+.game-banner {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    border: 1px solid var(--border-color);
+}
+
+.game-info {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.game-info .stars {
+    color: gold;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.game-info p {
+    font-size: 1.1em;
+    margin-bottom: 5px;
+}
+
+.game-info strong {
+    color: var(--accent-purple);
+}
+
+/* Styles for Payment Selection page */
+.transaction-summary {
+    background-color: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+.transaction-summary p {
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.transaction-summary strong {
+    color: var(--accent-purple);
+}
+
+.small-text {
+    font-size: 0.9em;
+    color: #bbb;
+    margin-top: 15px;
+    text-align: center;
+}
+
+/* Styles for Info Pages (Privacy, Terms) */
+.info-page-main {
+    padding: 50px 20px;
+}
+
+.info-card {
+    text-align: left;
+}
+
+.info-card h2 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.info-card h3 {
+    color: var(--accent-purple);
+    margin-top: 25px;
+    margin-bottom: 10px;
+    font-size: 1.5em;
+}
+
+.info-card p {
+    margin-bottom: 15px;
+    font-size: 1em;
+    color: #ddd;
+}
+
+.info-card ul {
+    list-style-type: disc;
+    margin-left: 25px;
+    margin-bottom: 20px;
+    color: #ddd;
+}
+
+.info-card li {
+    margin-bottom: 8px;
+    font-size: 1em;
+}
+
+.info-card a {
+    color: var(--accent-purple);
+    text-decoration: none;
+}
+
+.info-card a:hover {
+    text-decoration: underline;
+}
+
+/* Añadido para el asterisco de requerido */
+.required-star {
+    color: red;
+    margin-left: 3px;
+    font-size: 0.9em;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .header-right {
+        flex-direction: column;
+        width: 100%;
+        gap: 15px;
+    }
+
+    .search-bar, .custom-currency-selector {
+        width: 100%;
+    }
+
+    .search-bar input {
+        width: 100%;
+    }
+
+    .home-main h1 {
+        font-size: 2em;
+    }
+
+    .game-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .game-card {
+        padding-bottom: 10px;
+    }
+
+    .game-card img {
+        height: 150px;
+    }
+
+    .game-card h2 {
+        font-size: 1.3em;
+        margin: 10px 0 5px;
+    }
+
+    .form-container, .info-card, .payment-details-card {
+        margin: 30px 15px;
+        padding: 20px;
+    }
+
+    .form-container h2, .info-card h2, .payment-details-card h2 {
+        font-size: 1.8em;
+    }
+}
+
+@media (max-width: 480px) {
+    header {
+        padding: 10px 15px;
+    }
+
+    .logo-img { /* Ajuste para el logo en móvil */
+        height: 40px; 
+    }
+
+    .home-main h1 {
+        font-size: 1.8em;
+        margin-bottom: 30px;
+    }
+
+    .game-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-links {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .footer-links a {
+        margin: 0;
+    }
+}

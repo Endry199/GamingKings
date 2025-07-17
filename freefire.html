@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recargar Free Fire - GamingKings</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <a href="index.html" class="logo-link">
+                <img src="images/gamingkings_logo.png" alt="GamingKings Logo" class="logo-img">
+            </a>
+        </div>
+        <div class="header-right">
+            <div class="search-bar">
+                <input type="text" placeholder="Buscar juego...">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="custom-currency-selector" id="custom-currency-selector">
+                <div class="selected-currency" id="selected-currency">
+                    <img src="images/flag_ve.png" alt="Venezuela Flag"> <span>Bs. (VES)</span> <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="currency-options" id="currency-options">
+                    <div class="option" data-value="VES">
+                        <img src="images/flag_ve.png" alt="Venezuela Flag"> <span>Bs. (VES)</span>
+                    </div>
+                    <div class="option" data-value="USD">
+                        <img src="images/flag_us.png" alt="USA Flag"> <span>$ (USD)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="freefire-main">
+        <div class="form-container">
+            <img src="images/freefire_banner.jpg" alt="Free Fire Banner" class="game-banner">
+            <h2>Recargar Free Fire</h2>
+            <div class="game-info">
+                <div class="stars">★★★★★</div>
+                <p>Moneda actual: <span id="currency-display">USD</span></p> 
+            </div>
+
+            <form id="freefire-recharge-form">
+                <div class="form-group">
+                    <label for="player-id">1. Ingresa la ID de jugador:</label>
+                    <input type="text" id="player-id" name="playerId" placeholder="Ej: 123456789" required>
+                </div>
+
+                <div class="form-group">
+                    <label>2. Selecciona un plan:</label>
+                    <div class="package-list" id="package-list">
+                        </div>
+                </div>
+                
+                <button type="submit" class="btn-primary" id="confirm-recharge-btn" disabled>Confirmar Recarga</button>
+            </form>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 GamingKings. Todos los derechos reservados.</p>
+            <div class="footer-links">
+                <a href="privacy.html">Políticas de Privacidad</a>
+                <a href="terms.html">Términos de Servicio</a>
+            </div>
+            <a href="https://wa.me/584127123391" target="_blank" class="whatsapp-link">
+                <i class="fab fa-whatsapp"></i> Contáctanos por WhatsApp
+            </a>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const playerIdInput = document.getElementById('player-id');
+            const packageListDiv = document.getElementById('package-list');
+            const confirmBtn = document.getElementById('confirm-recharge-btn');
+            const currencyDisplaySpan = document.getElementById('currency-display');
+            
+            let selectedPackage = null;
+            // Tasa de dólar simulada. En un entorno real, vendría de una API.
+            const DOLLAR_RATE = 116.82; 
+
+            // Paquetes de Free Fire en USD (precios base)
+            const freeFirePackagesUSD = [
+                { id: 1, diamonds: 100, priceUSD: 1.20 },
+                { id: 2, diamonds: 310, priceUSD: 3.50 },
+                { id: 3, diamonds: 520, priceUSD: 5.75 },
+                { id: 4, diamonds: 1060, priceUSD: 11.50 },
+                { id: 5, diamonds: 2180, priceUSD: 23.00 },
+                { id: 6, diamonds: 5600, priceUSD: 55.00 },
+                { id: 7, diamonds: 'Tarjeta Semanal', priceUSD: 1.99 },
+                { id: 8, diamonds: 'Tarjeta Mensual', priceUSD: 7.99 }
+            ];
+
+            function formatPrice(price, currency) {
+                if (currency === 'VES') {
+                    return `Bs. ${price.toFixed(2)}`;
+                } else {
+                    return `$${price.toFixed(2)}`;
+                }
+            }
+
+            // Modificada para aceptar la moneda como parámetro
+            function updatePackages(currentCurrency) { 
+                currencyDisplaySpan.textContent = currentCurrency;
+
+                packageListDiv.innerHTML = ''; // Limpiar paquetes anteriores
+                freeFirePackagesUSD.forEach(pkg => {
+                    let displayPrice;
+                    if (currentCurrency === 'VES') {
+                        displayPrice = pkg.priceUSD * DOLLAR_RATE;
+                    } else {
+                        displayPrice = pkg.priceUSD;
+                    }
+
+                    const packageItem = document.createElement('div');
+                    packageItem.classList.add('package-item');
+                    packageItem.dataset.id = pkg.id;
+                    packageItem.dataset.priceUsd = pkg.priceUSD; // Guardar el precio en USD original
+                    packageItem.innerHTML = `
+                        <span>${pkg.diamonds} ${typeof pkg.diamonds === 'number' ? 'Diamantes' : ''}</span>
+                        <span class="price">${formatPrice(displayPrice, currentCurrency)}</span>
+                    `;
+                    packageItem.addEventListener('click', () => {
+                        if (selectedPackage) {
+                            selectedPackage.classList.remove('selected');
+                        }
+                        packageItem.classList.add('selected');
+                        selectedPackage = packageItem;
+                        checkFormValidity();
+                    });
+                    packageListDiv.appendChild(packageItem);
+                });
+                checkFormValidity();
+            }
+
+            function checkFormValidity() {
+                const playerIdValid = playerIdInput.value.trim() !== '';
+                confirmBtn.disabled = !(playerIdValid && selectedPackage);
+            }
+
+            // Llama a updatePackages con la moneda guardada al cargar la página
+            const initialCurrency = localStorage.getItem('selectedCurrency') || 'VES'; 
+            updatePackages(initialCurrency); 
+
+            playerIdInput.addEventListener('input', checkFormValidity);
+
+            // Escuchar el evento de cambio de moneda desde el script.js global
+            window.addEventListener('currencyChanged', (event) => {
+                const newCurrency = event.detail.currency;
+                updatePackages(newCurrency); // Pasar la nueva moneda
+            });
+
+            document.getElementById('freefire-recharge-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (selectedPackage) {
+                    const playerId = playerIdInput.value.trim();
+                    const packageDiamonds = selectedPackage.querySelector('span:first-child').textContent;
+                    const packagePriceUSD = parseFloat(selectedPackage.dataset.priceUsd);
+                    const selectedCurrency = localStorage.getItem('selectedCurrency') || 'VES'; 
+                    let finalPrice;
+
+                    if (selectedCurrency === 'VES') {
+                        finalPrice = packagePriceUSD * DOLLAR_RATE;
+                    } else {
+                        finalPrice = packagePriceUSD;
+                    }
+                    
+                    const transactionDetails = {
+                        game: "Free Fire",
+                        playerId: playerId,
+                        package: packageDiamonds,
+                        priceUSD: packagePriceUSD.toFixed(2), // Precio base en USD
+                        finalPrice: finalPrice.toFixed(2),
+                        currency: selectedCurrency 
+                    };
+
+                    localStorage.setItem('transactionDetails', JSON.stringify(transactionDetails));
+                    window.location.href = 'payment.html';
+                } else {
+                    alert('Por favor, selecciona un plan de recarga.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
