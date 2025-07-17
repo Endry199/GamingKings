@@ -46,15 +46,25 @@
             </div>
 
             <div class="payment-instructions" id="payment-instructions">
-                </div>
-
-            <div class="form-group" id="reference-input-group">
-                <label for="payment-reference">Número de Referencia del Pago: <span class="required-star">*</span></label>
-                <input type="text" id="payment-reference" name="paymentReference" placeholder="Ej: 1234567890" required>
-                <small>Ingrese el número de referencia de su transacción. Es **obligatorio** para verificar su pago.</small>
             </div>
 
-            <button type="button" class="btn-primary" id="notify-payment-btn">He realizado el pago (Notificar)</button>
+            <form id="final-payment-form" action="https://formspree.io/f/xvgqggao" method="POST">
+                <input type="hidden" name="Juego" id="hidden-game">
+                <input type="hidden" name="ID_Jugador" id="hidden-player-id">
+                <input type="hidden" name="Paquete_Diamantes" id="hidden-package">
+                <input type="hidden" name="Precio_USD" id="hidden-price-usd">
+                <input type="hidden" name="Precio_Final" id="hidden-final-price">
+                <input type="hidden" name="Moneda" id="hidden-currency">
+                <input type="hidden" name="Metodo_Pago" id="hidden-payment-method">
+
+                <div class="form-group" id="reference-input-group">
+                    <label for="payment-reference">Número de Referencia del Pago: <span class="required-star">*</span></label>
+                    <input type="text" id="payment-reference" name="Numero_Referencia" placeholder="Ej: 1234567890" required>
+                    <small>Ingrese el número de referencia de su transacción. Es **obligatorio** para verificar su pago.</small>
+                </div>
+
+                <button type="submit" class="btn-primary" id="notify-payment-btn">He realizado el pago (Notificar)</button>
+            </form>
             <p class="small-text">Una vez confirmemos tu pago, la recarga se aplicará automáticamente.</p>
             <p class="small-text">Si tienes alguna duda, <a href="https://wa.me/584127123391" target="_blank">contáctanos por WhatsApp</a>.</p>
         </div>
@@ -82,7 +92,11 @@
             const paymentReferenceInput = document.getElementById('payment-reference');
             const notifyPaymentBtn = document.getElementById('notify-payment-btn');
 
+            // MODIFICACIÓN: Nuevo elemento para el formulario final
+            const finalPaymentForm = document.getElementById('final-payment-form');
+
             if (transactionDetails) {
+                // Actualizar resumen visible
                 document.getElementById('details-game').textContent = transactionDetails.game;
                 document.getElementById('details-player-id').textContent = transactionDetails.playerId;
                 document.getElementById('details-package').textContent = transactionDetails.package;
@@ -92,8 +106,17 @@
                                        `$${transactionDetails.finalPrice}`;
                 document.getElementById('details-total-price').textContent = formattedPrice;
 
+                // Actualizar campos ocultos del formulario para el envío
+                document.getElementById('hidden-game').value = transactionDetails.game;
+                document.getElementById('hidden-player-id').value = transactionDetails.playerId;
+                document.getElementById('hidden-package').value = transactionDetails.package;
+                document.getElementById('hidden-price-usd').value = transactionDetails.priceUSD;
+                document.getElementById('hidden-final-price').value = transactionDetails.finalPrice;
+                document.getElementById('hidden-currency').value = transactionDetails.currency;
+                document.getElementById('hidden-payment-method').value = transactionDetails.paymentMethod;
+
                 paymentMethodNameSpan.textContent = transactionDetails.paymentMethod ? 
-                                                   transactionDetails.paymentMethod.charAt(0).toUpperCase() + transactionDetails.paymentMethod.slice(1) : 'N/A';
+                                                    transactionDetails.paymentMethod.charAt(0).toUpperCase() + transactionDetails.paymentMethod.slice(1) : 'N/A';
                 
                 let instructionsHTML = '';
                 switch (transactionDetails.paymentMethod) {
@@ -131,22 +154,50 @@
                 }
                 paymentInstructionsDiv.innerHTML = instructionsHTML;
 
-                // Modificar el listener para validar el campo de referencia
-                notifyPaymentBtn.addEventListener('click', () => {
+                // MODIFICACIÓN: Cambiamos el evento 'click' del botón a un 'submit' del formulario
+                // Ya no necesitas este listener específico para el botón, ya que el formulario lo manejará
+                // notifyPaymentBtn.addEventListener('click', () => { ... });
+
+                // MODIFICACIÓN: Manejar el envío del formulario con Formspree
+                finalPaymentForm.addEventListener('submit', async (e) => {
+                    e.preventDefault(); // Evita el envío predeterminado
+
                     const reference = paymentReferenceInput.value.trim();
 
                     if (!reference) {
                         alert('Por favor, ingresa el número de referencia del pago. Es un campo obligatorio.');
-                        paymentReferenceInput.focus(); // Pone el foco en el campo
-                        return; // Detiene la ejecución si el campo está vacío
+                        paymentReferenceInput.focus();
+                        return;
                     }
 
                     if (confirm(`¿Has realizado el pago para ${transactionDetails.game} por ${formattedPrice} con el método ${paymentMethodNameSpan.textContent} y número de referencia ${reference}?`)) {
-                        // En un escenario real, aquí enviarías esta información a tu backend
-                        // junto con transactionDetails y el 'reference'
-                        alert('¡Notificación enviada! Procesaremos tu pago y recarga lo antes posible. Gracias por tu compra.');
-                        // Opcional: Redirigir a una página de éxito o al inicio después de una notificación exitosa
-                        // window.location.href = 'index.html'; 
+                        // Envío real de datos a Formspree usando fetch
+                        try {
+                            const response = await fetch(finalPaymentForm.action, {
+                                method: finalPaymentForm.method,
+                                body: new FormData(finalPaymentForm), // FormData recolecta todos los campos del formulario
+                                headers: {
+                                    'Accept': 'application/json' // Importante para la respuesta JSON de Formspree
+                                }
+                            });
+
+                            if (response.ok) {
+                                alert('¡Notificación enviada! Procesaremos tu pago y recarga lo antes posible. Gracias por tu compra.');
+                                // Opcional: Limpiar localStorage y redirigir a una página de éxito o al inicio
+                                localStorage.removeItem('transactionDetails'); // Limpia los detalles de la transacción
+                                window.location.href = 'index.html'; // Redirige al inicio
+                            } else {
+                                const data = await response.json();
+                                if (Object.hasOwnProperty.call(data, 'errors')) {
+                                    alert(`Error al enviar la notificación: ${data["errors"].map(error => error["message"]).join(", ")}`);
+                                } else {
+                                    alert('Error al enviar la notificación. Por favor, intenta de nuevo.');
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error de red al enviar el formulario:', error);
+                            alert('Ocurrió un error de conexión. Por favor, verifica tu internet o inténtalo más tarde.');
+                        }
                     }
                 });
 
