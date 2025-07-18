@@ -48,12 +48,14 @@
                 <div class="form-group">
                     <label for="player-id">1. Ingresa la ID de jugador:</label>
                     <input type="text" id="player-id" name="playerId" placeholder="Ej: 123456789" required>
-                </div>
+                    <p id="nickDisplay" style="margin-top: 5px; font-weight: bold;"></p>
+                    <button type="button" id="verifyNickBtn" class="btn btn-info btn-sm mt-2">Verificar Nick</button>
+                    </div>
 
                 <div class="form-group">
                     <label>2. Selecciona un plan:</label>
                     <div class="package-list" id="package-list">
-                        </div>
+                    </div>
                 </div>
                 
                 <button type="submit" class="btn-primary" id="confirm-recharge-btn" disabled>Confirmar Recarga</button>
@@ -74,19 +76,19 @@
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="script.js"></script> 
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const playerIdInput = document.getElementById('player-id');
             const packageListDiv = document.getElementById('package-list');
             const confirmBtn = document.getElementById('confirm-recharge-btn');
             const currencyDisplaySpan = document.getElementById('currency-display');
+            const freefireRechargeForm = document.getElementById('freefire-recharge-form'); // Capturamos el formulario
             
             let selectedPackage = null;
-            // Tasa de dólar simulada. En un entorno real, vendría de una API.
             const DOLLAR_RATE = 116.82; 
 
-            // Paquetes de Free Fire en USD (precios base)
             const freeFirePackagesUSD = [
                 { id: 1, diamonds: 100, priceUSD: 1.20 },
                 { id: 2, diamonds: 310, priceUSD: 3.50 },
@@ -106,11 +108,10 @@
                 }
             }
 
-            // Modificada para aceptar la moneda como parámetro
             function updatePackages(currentCurrency) { 
                 currencyDisplaySpan.textContent = currentCurrency;
 
-                packageListDiv.innerHTML = ''; // Limpiar paquetes anteriores
+                packageListDiv.innerHTML = '';
                 freeFirePackagesUSD.forEach(pkg => {
                     let displayPrice;
                     if (currentCurrency === 'VES') {
@@ -122,7 +123,7 @@
                     const packageItem = document.createElement('div');
                     packageItem.classList.add('package-item');
                     packageItem.dataset.id = pkg.id;
-                    packageItem.dataset.priceUsd = pkg.priceUSD; // Guardar el precio en USD original
+                    packageItem.dataset.priceUsd = pkg.priceUSD;
                     packageItem.innerHTML = `
                         <span>${pkg.diamonds} ${typeof pkg.diamonds === 'number' ? 'Diamantes' : ''}</span>
                         <span class="price">${formatPrice(displayPrice, currentCurrency)}</span>
@@ -140,9 +141,12 @@
                 checkFormValidity();
             }
 
+            // checkFormValidity ahora también considerará si el nick ha sido verificado (opcionalmente)
             function checkFormValidity() {
                 const playerIdValid = playerIdInput.value.trim() !== '';
-                confirmBtn.disabled = !(playerIdValid && selectedPackage);
+                // Por ahora, el botón solo se habilita si hay ID y paquete seleccionado.
+                // Podríamos añadir que se haya verificado el nick si queremos hacerlo mandatorio.
+                confirmBtn.disabled = !(playerIdValid && selectedPackage); 
             }
 
             // Llama a updatePackages con la moneda guardada al cargar la página
@@ -151,42 +155,16 @@
 
             playerIdInput.addEventListener('input', checkFormValidity);
 
-            // Escuchar el evento de cambio de moneda desde el script.js global
             window.addEventListener('currencyChanged', (event) => {
                 const newCurrency = event.detail.currency;
-                updatePackages(newCurrency); // Pasar la nueva moneda
+                updatePackages(newCurrency);
             });
 
-            document.getElementById('freefire-recharge-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                if (selectedPackage) {
-                    const playerId = playerIdInput.value.trim();
-                    const packageDiamonds = selectedPackage.querySelector('span:first-child').textContent;
-                    const packagePriceUSD = parseFloat(selectedPackage.dataset.priceUsd);
-                    const selectedCurrency = localStorage.getItem('selectedCurrency') || 'VES'; 
-                    let finalPrice;
-
-                    if (selectedCurrency === 'VES') {
-                        finalPrice = packagePriceUSD * DOLLAR_RATE;
-                    } else {
-                        finalPrice = packagePriceUSD;
-                    }
-                    
-                    const transactionDetails = {
-                        game: "Free Fire",
-                        playerId: playerId,
-                        package: packageDiamonds,
-                        priceUSD: packagePriceUSD.toFixed(2), // Precio base en USD
-                        finalPrice: finalPrice.toFixed(2),
-                        currency: selectedCurrency 
-                    };
-
-                    localStorage.setItem('transactionDetails', JSON.stringify(transactionDetails));
-                    window.location.href = 'payment.html';
-                } else {
-                    alert('Por favor, selecciona un plan de recarga.');
-                }
-            });
+            // EL EVENT LISTENER DEL FORMULARIO SE MOVIÓ AL SCRIPT.JS PRINCIPAL PARA MEJOR ORGANIZACIÓN.
+            // Asegúrate de que el script.js principal se cargue DESPUÉS de este HTML.
+            // También me he asegurado de que el ID del formulario sea el que usa el script.js
+            // (que en tu caso era 'rechargeForm' en la plantilla, pero aquí es 'freefire-recharge-form')
+            // Ajustaré script.js para que use 'freefire-recharge-form' o sea más flexible.
         });
     </script>
 </body>

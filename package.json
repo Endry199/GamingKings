@@ -18,6 +18,7 @@
   "homepage": "https://github.com/Endry199/GamingKings#readme",
   "description": "",
   "dependencies": {
-    "axios": "^1.10.0"
+    "axios": "^1.10.0",
+    "cheerio": "^1.1.0"
   }
 }
