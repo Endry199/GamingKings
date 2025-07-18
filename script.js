@@ -51,53 +51,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ---- Lógica de la barra de búsqueda (filtrado en la misma página) ----
     const searchInput = document.querySelector('.search-bar input');
-    const gameGrid = document.getElementById('game-grid'); 
+    const gameGrid = document.getElementById('game-grid'); // Obtener el contenedor de la cuadrícula de juegos
+    // Asegurarse de que gameCards se obtenga solo si gameGrid existe, para evitar errores en otras páginas.
     const gameCards = gameGrid ? gameGrid.querySelectorAll('.game-card') : []; 
 
+    // Usar el evento 'input' para filtrar en tiempo real a medida que el usuario escribe
     searchInput.addEventListener('input', () => { 
         const searchTerm = searchInput.value.toLowerCase();
 
+        // Solo ejecutar la lógica de filtrado si estamos en la página que tiene el 'game-grid'
         if (gameGrid) {
             gameCards.forEach(card => {
-                const gameName = card.querySelector('h2').textContent.toLowerCase();
+                const gameName = card.querySelector('h2').textContent.toLowerCase(); // Obtener el nombre del juego
 
                 if (gameName.includes(searchTerm)) {
-                    card.style.display = 'flex';
+                    card.style.display = 'flex'; // Mostrar la tarjeta si coincide
                 } else {
-                    card.style.display = 'none';
+                    card.style.display = 'none'; // Ocultar la tarjeta si no coincide
                 }
             });
         }
     });
 
-    // --- CÓDIGO PARA LA VERIFICACIÓN DE NICK DE FREE FIRE (APLICABLE EN freefire.html) ---
+    // --- NUEVO CÓDIGO PARA LA VERIFICACIÓN DE NICK DE FREE FIRE ---
 
-    // Elementos del formulario de recarga de Free Fire
-    const form = document.getElementById('freefire-recharge-form'); // El formulario en freefire.html
-    const idInput = document.getElementById('player-id'); // El campo de ID en freefire.html
-    const nickDisplay = document.getElementById('nickDisplay'); // El nuevo elemento para el nick
-    const submitButton = document.getElementById('confirm-recharge-btn'); // El botón de confirmación
-    const verifyNickButton = document.getElementById('verifyNickBtn'); // El nuevo botón de verificación
+    // Asegúrate de que estos elementos existan en tu freefire.html
+    // Si estás modificando index.html para la lógica de recarga (lo cual no es lo ideal,
+    // normalmente la recarga va en la página específica del juego como freefire.html)
+    // entonces necesitarías los IDs aquí. Por ahora, asumo que esto va en freefire.html
+    // o que estos IDs existen en tu index.html si es una SPA.
+    const form = document.getElementById('rechargeForm'); // Tu formulario principal (debe existir en el HTML relevante)
+    const idInput = document.getElementById('playerId'); // El campo donde el usuario ingresa la ID (debe existir en el HTML relevante)
+    const nickDisplay = document.getElementById('nickDisplay'); // Un elemento nuevo (por ejemplo, un <span> o <p>) donde se mostrará el nick
+    const submitButton = document.getElementById('submitBtn'); // Tu botón de envío del formulario (debe existir en el HTML relevante)
+    const verifyNickButton = document.getElementById('verifyNickBtn'); // Botón opcional para verificar el nick por separado
 
     // Función para limpiar caracteres especiales del nickname
     function cleanNickname(nickname) {
-        // Reemplaza el patrón problemático por el corazón real
-        // Añade más reemplazos si aparecen otros símbolos
+        // Puedes ajustar esto para más caracteres si es necesario
         return nickname.replace(/â¤ï¸/g, '❤️').replace(/âœ¨/g, '✨').trim();
     }
 
     // Función para verificar el Nick del jugador
     async function verifyNickname(id) {
-        if (!nickDisplay) return null; // Salir si el elemento no existe (ej. no estamos en freefire.html)
+        if (!nickDisplay) return null; // Asegúrate de que el elemento exista antes de continuar
 
         nickDisplay.textContent = 'Verificando Nick...';
         nickDisplay.style.color = 'orange';
-        
-        // Deshabilita el botón de verificar y el de submit temporalmente si existen
-        if (verifyNickButton) verifyNickButton.disabled = true;
-        if (submitButton) submitButton.disabled = true;
 
         try {
+            // Llama a nuestra Netlify Function para el scraping
             const response = await fetch(`/.netlify/functions/get-ff-nick?id=${id}`);
             const data = await response.json();
 
@@ -105,34 +108,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cleanedNick = cleanNickname(data.nickname);
                 nickDisplay.textContent = `Nick: ${cleanedNick}`;
                 nickDisplay.style.color = 'green';
-                
-                // Re-habilita el botón de submit (solo si un nick válido fue encontrado)
-                if (submitButton) submitButton.disabled = false;
-                
-                return cleanedNick;
+                return cleanedNick; // Retorna el nick limpio
             } else {
                 nickDisplay.textContent = `Error: ${data.message}`;
                 nickDisplay.style.color = 'red';
-                // Si la verificación falla, el botón de submit debe seguir deshabilitado
-                if (submitButton) submitButton.disabled = true; 
                 return null;
             }
         } catch (error) {
             console.error('Error al llamar a la función de Netlify:', error);
             nickDisplay.textContent = 'Error de conexión al verificar el Nick.';
             nickDisplay.style.color = 'red';
-            // Si hay un error de conexión, el botón de submit debe seguir deshabilitado
-            if (submitButton) submitButton.disabled = true;
             return null;
-        } finally {
-            // Siempre re-habilita el botón de verificar (si existe)
-            if (verifyNickButton) verifyNickButton.disabled = false;
-            if (verifyNickButton) verifyNickButton.textContent = 'Verificar Nick'; // Restaura el texto
         }
     }
 
-    // --- MODIFICAR EL ENVÍO DEL FORMULARIO DE RECARGA ---
-    // Esta parte solo se ejecutará si el 'form' existe en el HTML (es decir, en freefire.html)
+    // --- MODIFICAR EL ENVÍO DEL FORMULARIO (Si este script se usa en la página de recarga) ---
+    // Esta parte solo se ejecutará si el 'form' existe en el HTML donde se carga este script
     if (form) {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -144,72 +135,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Deshabilita el botón mientras se verifica y envía
             if (submitButton) {
                 submitButton.disabled = true;
                 submitButton.textContent = 'Procesando...';
             }
-            // También el botón de verificar, si existe
-            if (verifyNickButton) {
-                verifyNickButton.disabled = true;
-                verifyNickButton.textContent = 'Procesando...';
-            }
 
-
-            // 1. Llama a la función de verificación del Nick (ahora es parte del flujo de submit)
             const nickname = await verifyNickname(id);
 
             if (nickname) {
-                // Si el nick se verificó con éxito, procede con el envío a Telegram
+                // Aquí deberías tener tu token de bot y chat ID
                 const telegramBotToken = 'YOUR_TELEGRAM_BOT_TOKEN'; // ¡CAMBIA ESTO!
                 const chatId = 'YOUR_CHAT_ID'; // ¡CAMBIA ESTO!
 
-                const selectedAmountElement = document.getElementById('amountSelect'); // Este ID no existe en freefire.html
-                const selectedAmount = selectedAmountElement ? selectedAmountElement.value : (selectedPackage ? selectedPackage.dataset.diamonds : 'N/A'); // Usamos el paquete seleccionado
-                
-                const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked'); // Este elemento no existe en freefire.html
+                const selectedAmount = document.getElementById('amountSelect') ? document.getElementById('amountSelect').value : 'N/A';
+                const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
                 const paymentMethodValue = selectedPaymentMethod ? selectedPaymentMethod.value : 'N/A';
 
-                // Obtener el paquete seleccionado del script local de freefire.html
-                // Ya tenemos 'selectedPackage' en el ámbito de freefire.html, pero no aquí directamente.
-                // Necesitaríamos una forma de pasar la info del paquete seleccionado si el submit es aquí.
-                // Para simplificar, asumiremos que selectedPackage se obtiene dentro del submit handler en freefire.html
-                // o que los datos del paquete son globales/accesibles.
-
-                // MEJORA: Para obtener el paquete seleccionado correctamente:
-                // El `selectedPackage` se maneja en el script interno de `freefire.html`.
-                // Necesitamos acceder a él o pasarlo. La forma más sencilla es que el script interno
-                // de `freefire.html` maneje el submit, o exponer `selectedPackage` globalmente
-                // o pasarlo como parte del localStorage.
-
-                // Por ahora, estoy comentando estas líneas y asumiendo que el `freefire.html`
-                // script interno se encarga del `selectedPackage`.
-                // Si el submit fuera manejado completamente aquí, necesitarías que `selectedPackage`
-                // fuera una variable global o que su valor se guardara en un input oculto.
-
-                // TEMPORAL: Para el mensaje de Telegram, voy a obtener la info del paquete de una forma simple.
-                // Esta parte puede necesitar un refinamiento si `selectedPackage` no es directamente accesible
-                // en este script.
-                const currentPackageElement = document.querySelector('.package-item.selected');
-                let packageDiamonds = 'N/A';
-                let packagePriceUSD = 'N/A';
-                if (currentPackageElement) {
-                    packageDiamonds = currentPackageElement.querySelector('span:first-child').textContent;
-                    packagePriceUSD = parseFloat(currentPackageElement.dataset.priceUsd).toFixed(2);
-                }
-                const selectedCurrency = localStorage.getItem('selectedCurrency') || 'VES'; 
-                let finalPrice = 'N/A';
-                if (packagePriceUSD !== 'N/A') {
-                    finalPrice = selectedCurrency === 'VES' ? (parseFloat(packagePriceUSD) * DOLLAR_RATE).toFixed(2) : parseFloat(packagePriceUSD).toFixed(2);
-                }
-                
                 let message = `🚀 Nueva Recarga - GamingKings 🚀\n`;
                 message += `-----------------------------------\n`;
                 message += `🎮 ID de Free Fire: ${id}\n`;
                 message += `✨ Nick Verificado: ${nickname}\n`; // Añadimos el nick verificado
-                message += `💎 Paquete: ${packageDiamonds}\n`; // Añadimos el paquete de diamantes
-                message += `💰 Precio (USD): $${packagePriceUSD}\n`; // Precio en USD
-                message += `💲 Precio Final (${selectedCurrency}): ${selectedCurrency === 'VES' ? 'Bs.' : '$'}${finalPrice}\n`; // Precio final
+                message += `💰 Monto: ${selectedAmount}\n`;
+                message += `💳 Método de Pago: ${paymentMethodValue}\n`;
                 message += `-----------------------------------\n`;
                 message += `Por favor, procesar esta recarga.`;
 
@@ -222,11 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         alert('¡Solicitud de recarga enviada con éxito! Revisa tu Telegram.');
                         form.reset();
                         if (nickDisplay) nickDisplay.textContent = '';
-                        // Reiniciar el estado del paquete seleccionado si es necesario
-                        const currentlySelectedPackage = document.querySelector('.package-item.selected');
-                        if (currentlySelectedPackage) {
-                            currentlySelectedPackage.classList.remove('selected');
-                        }
                     } else {
                         alert('Hubo un error al enviar la solicitud a Telegram. Intenta de nuevo.');
                         console.error('Error de Telegram:', telegramData);
@@ -236,23 +178,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Error de conexión. No se pudo enviar la solicitud.');
                 }
             } else {
-                // Si el nick no se pudo verificar, el mensaje de error ya lo muestra verifyNickname
                 alert('No se pudo verificar el Nick. Por favor, revisa la ID o intenta más tarde.');
             }
 
-            // Habilita los botones de nuevo al finalizar
             if (submitButton) {
                 submitButton.disabled = false;
-                submitButton.textContent = 'Confirmar Recarga';
-            }
-            if (verifyNickButton) {
-                verifyNickButton.disabled = false;
-                verifyNickButton.textContent = 'Verificar Nick';
+                submitButton.textContent = 'Recargar Ahora';
             }
         });
     }
 
-    // --- Evento para el botón de verificar Nick por separado ---
+    // --- OPCIONAL: Añadir evento al botón de verificar Nick por separado ---
     if (verifyNickButton) {
         verifyNickButton.addEventListener('click', async () => {
             const id = idInput.value;
@@ -260,20 +196,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Por favor, ingresa tu ID de Free Fire para verificar el Nick.');
                 return;
             }
-            // verifyNickname ya maneja el estado del botón
+            verifyNickButton.disabled = true;
+            verifyNickButton.textContent = 'Verificando...';
             await verifyNickname(id);
+            verifyNickButton.disabled = false;
+            verifyNickButton.textContent = 'Verificar Nick';
         });
-    }
-
-    // --- Lógica para el botón de confirmar recarga (disabler/enabler)
-    // Mantenemos la lógica de habilitar/deshabilitar el botón de recarga aquí si no es global
-    // (Ya hay una checkFormValidity en el script interno de freefire.html, lo cual es redundante)
-    // Lo ideal es que el `checkFormValidity` en el script interno de `freefire.html` llame a una función
-    // global o se asegure de que el botón se habilite/deshabilite correctamente.
-
-    // Vamos a asegurar que el botón de confirmación esté deshabilitado inicialmente si no hay ID o paquete.
-    // Esto ya lo hace el script interno de freefire.html, pero lo reforzamos si es necesario.
-    if (confirmBtn && idInput && !idInput.value.trim()) {
-        confirmBtn.disabled = true;
     }
 });
