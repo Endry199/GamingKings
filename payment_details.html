@@ -48,7 +48,7 @@
             <div class="payment-instructions" id="payment-instructions">
             </div>
 
-            <form id="final-payment-form" action="https://formspree.io/f/xvgqggao" method="POST">
+            <form id="final-payment-form">
                 <input type="hidden" name="Juego" id="hidden-game">
                 <input type="hidden" name="ID_Jugador" id="hidden-player-id">
                 <input type="hidden" name="Paquete_Diamantes" id="hidden-package">
@@ -102,8 +102,8 @@
                 document.getElementById('details-package').textContent = transactionDetails.package;
                 
                 const formattedPrice = transactionDetails.currency === 'VES' ? 
-                                       `Bs. ${transactionDetails.finalPrice}` : 
-                                       `$${transactionDetails.finalPrice}`;
+                                     `Bs. ${transactionDetails.finalPrice}` : 
+                                     `$${transactionDetails.finalPrice}`;
                 document.getElementById('details-total-price').textContent = formattedPrice;
 
                 // Actualizar campos ocultos del formulario para el envío
@@ -116,7 +116,7 @@
                 document.getElementById('hidden-payment-method').value = transactionDetails.paymentMethod;
 
                 paymentMethodNameSpan.textContent = transactionDetails.paymentMethod ? 
-                                                    transactionDetails.paymentMethod.charAt(0).toUpperCase() + transactionDetails.paymentMethod.slice(1) : 'N/A';
+                                                     transactionDetails.paymentMethod.charAt(0).toUpperCase() + transactionDetails.paymentMethod.slice(1) : 'N/A';
                 
                 let instructionsHTML = '';
                 switch (transactionDetails.paymentMethod) {
@@ -154,13 +154,9 @@
                 }
                 paymentInstructionsDiv.innerHTML = instructionsHTML;
 
-                // MODIFICACIÓN: Cambiamos el evento 'click' del botón a un 'submit' del formulario
-                // Ya no necesitas este listener específico para el botón, ya que el formulario lo manejará
-                // notifyPaymentBtn.addEventListener('click', () => { ... });
-
-                // MODIFICACIÓN: Manejar el envío del formulario con Formspree
+                // MODIFICACIÓN CRUCIAL: Manejar el envío del formulario con JavaScript para enviar a Netlify Function
                 finalPaymentForm.addEventListener('submit', async (e) => {
-                    e.preventDefault(); // Evita el envío predeterminado
+                    e.preventDefault(); // Evita el envío predeterminado del formulario
 
                     const reference = paymentReferenceInput.value.trim();
 
@@ -171,32 +167,44 @@
                     }
 
                     if (confirm(`¿Has realizado el pago para ${transactionDetails.game} por ${formattedPrice} con el método ${paymentMethodNameSpan.textContent} y número de referencia ${reference}?`)) {
-                        // Envío real de datos a Formspree usando fetch
+                        
+                        // Recolectar todos los datos del formulario
+                        const formData = new FormData(finalPaymentForm);
+                        const data = Object.fromEntries(formData.entries());
+
+                        // Añadir la referencia al objeto de datos (ya está en formData, pero para consistencia)
+                        data.Numero_Referencia = reference;
+
+                        // Deshabilitar el botón para evitar múltiples envíos
+                        notifyPaymentBtn.disabled = true;
+                        notifyPaymentBtn.textContent = 'Enviando...';
+
                         try {
-                            const response = await fetch(finalPaymentForm.action, {
-                                method: finalPaymentForm.method,
-                                body: new FormData(finalPaymentForm), // FormData recolecta todos los campos del formulario
+                            // Enviar los datos a tu Netlify Function (REEMPLAZA ESTA URL CON LA REAL DE TU FUNCIÓN)
+                            const response = await fetch('/.netlify/functions/recargar', { // Esta es la URL relativa de tu función
+                                method: 'POST',
                                 headers: {
-                                    'Accept': 'application/json' // Importante para la respuesta JSON de Formspree
-                                }
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(data)
                             });
 
                             if (response.ok) {
-                                alert('¡Notificación enviada! Procesaremos tu pago y recarga lo antes posible. Gracias por tu compra.');
-                                // Opcional: Limpiar localStorage y redirigir a una página de éxito o al inicio
+                                alert('¡Notificación de pago enviada con éxito! Procesaremos tu recarga lo antes posible. Gracias por tu compra.');
                                 localStorage.removeItem('transactionDetails'); // Limpia los detalles de la transacción
                                 window.location.href = 'index.html'; // Redirige al inicio
                             } else {
-                                const data = await response.json();
-                                if (Object.hasOwnProperty.call(data, 'errors')) {
-                                    alert(`Error al enviar la notificación: ${data["errors"].map(error => error["message"]).join(", ")}`);
-                                } else {
-                                    alert('Error al enviar la notificación. Por favor, intenta de nuevo.');
-                                }
+                                const errorData = await response.json();
+                                alert(`Error al enviar la notificación: ${errorData.message || 'Error desconocido'}`);
+                                console.error('Error de respuesta de la función:', errorData);
                             }
                         } catch (error) {
-                            console.error('Error de red al enviar el formulario:', error);
-                            alert('Ocurrió un error de conexión. Por favor, verifica tu internet o inténtalo más tarde.');
+                            console.error('Error de red o en la función:', error);
+                            alert('Ocurrió un error de conexión o en el servidor. Por favor, verifica tu internet o inténtalo más tarde.');
+                        } finally {
+                            // Volver a habilitar el botón
+                            notifyPaymentBtn.disabled = false;
+                            notifyPaymentBtn.textContent = 'He realizado el pago (Notificar)';
                         }
                     }
                 });
