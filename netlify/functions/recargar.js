@@ -1,7 +1,13 @@
 const axios = require('axios');
 
+// Función para escapar caracteres especiales de MarkdownV2
+function escapeMarkdownV2(text) {
+    // Caracteres especiales que deben ser escapados en MarkdownV2
+    const specialChars = /[_\*\[\]\(\)~`>#+\-=\|\{\}\.!]/g;
+    return text.replace(specialChars, '\\$&');
+}
+
 exports.handler = async (event, context) => {
-    // Asegurarse de que la solicitud es POST
     if (event.httpMethod !== 'POST') {
         return {
             statusCode: 405,
@@ -11,7 +17,6 @@ exports.handler = async (event, context) => {
 
     let data;
     try {
-        // Parsear el cuerpo de la solicitud JSON
         data = JSON.parse(event.body);
     } catch (error) {
         return {
@@ -20,7 +25,6 @@ exports.handler = async (event, context) => {
         };
     }
 
-    // Extraer los datos del formulario que vienen del frontend
     const {
         Juego,
         ID_Jugador,
@@ -32,7 +36,6 @@ exports.handler = async (event, context) => {
         Numero_Referencia
     } = data;
 
-    // Validar que los campos esenciales existan
     if (!Juego || !ID_Jugador || !Paquete_Diamantes || !Metodo_Pago || !Numero_Referencia) {
         return {
             statusCode: 400,
@@ -40,8 +43,6 @@ exports.handler = async (event, context) => {
         };
     }
 
-    // **IMPORTANTE: Usa variables de entorno para el token y la ID de chat por seguridad**
-    // Estos valores los configurarás en el panel de Netlify, NO los pongas directamente aquí.
     const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
@@ -53,30 +54,40 @@ exports.handler = async (event, context) => {
         };
     }
 
-    // Construir el mensaje para Telegram
+    // Escapar todos los datos variables antes de insertarlos en el mensaje
+    const escapedJuego = escapeMarkdownV2(Juego);
+    const escapedID_Jugador = escapeMarkdownV2(ID_Jugador);
+    const escapedPaquete_Diamantes = escapeMarkdownV2(Paquete_Diamantes);
+    const escapedPrecio_USD = escapeMarkdownV2(String(Precio_USD)); // Convertir a string para escapar
+    const escapedPrecio_Final = escapeMarkdownV2(String(Precio_Final)); // Convertir a string para escapar
+    const escapedMoneda = escapeMarkdownV2(Moneda);
+    const escapedMetodo_Pago = escapeMarkdownV2(Metodo_Pago.toUpperCase());
+    const escapedNumero_Referencia = escapeMarkdownV2(Numero_Referencia);
+
+
+    // Construir el mensaje para Telegram con los valores escapados
     const mensaje = `
-        🎮 *GamingKings - Nueva Solicitud de Recarga* 🎮
+        🎮 *GamingKings \\- Nueva Solicitud de Recarga* 🎮
 
-        ---
+        \\---
         *Detalles del Pedido:*
-        Juego: *${Juego}*
-        ID de Jugador: \`${ID_Jugador}\`
-        Paquete: *${Paquete_Diamantes}*
-        Precio (USD): $${Precio_USD}
-        Precio Final: ${Moneda === 'VES' ? 'Bs.' : '$'}${Precio_Final} (${Moneda})
-        Método de Pago: *${Metodo_Pago.toUpperCase()}*
-        Número de Referencia: \`${Numero_Referencia}\`
-        ---
+        Juego: *${escapedJuego}*
+        ID de Jugador: \`${escapedID_Jugador}\`
+        Paquete: *${escapedPaquete_Diamantes}*
+        Precio (USD): \\$${escapedPrecio_USD}
+        Precio Final: ${escapedMoneda === 'VES' ? 'Bs\\.' : '\\$'}${escapedPrecio_Final} \\(${escapedMoneda}\\)
+        Método de Pago: *${escapedMetodo_Pago}*
+        Número de Referencia: \`${escapedNumero_Referencia}\`
+        \\---
 
-        _Por favor, verifica el pago y procesa la recarga._
+        _Por favor\\, verifica el pago y procesa la recarga\\._
     `;
 
     try {
-        // Enviar el mensaje a Telegram
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             chat_id: TELEGRAM_CHAT_ID,
             text: mensaje,
-            parse_mode: 'MarkdownV2' // Usamos MarkdownV2 para formato de texto
+            parse_mode: 'MarkdownV2'
         });
 
         return {
