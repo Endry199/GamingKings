@@ -1,20 +1,19 @@
 const axios = require('axios');
 
 // Función para escapar caracteres especiales de MarkdownV2
-// Escapa todos los caracteres que son especiales en MarkdownV2
-// Se ha mejorado la expresión regular para ser más exhaustiva y correcta para MarkdownV2
+// Esta regex es muy completa, pero Telegram a veces es quisquilloso.
 function escapeMarkdownV2(text) {
     if (typeof text !== 'string') {
         text = String(text); // Asegurarse de que sea una cadena
     }
     // Lista de caracteres especiales en MarkdownV2 que requieren ser escapados
-    // Se incluye el guion '-' que fue la causa del error.
+    // Esta regex incluye el guion '-' que es el origen del problema.
+    // También escapa caracteres como '.', '(', ')', etc.
     const specialChars = /[_\*\[\]\(\)~`>#+\-=\|\{\}\.!]/g;
     return text.replace(specialChars, '\\$&');
 }
 
 exports.handler = async (event, context) => {
-    // Asegurarse de que la solicitud es POST
     if (event.httpMethod !== 'POST') {
         return {
             statusCode: 405,
@@ -24,17 +23,14 @@ exports.handler = async (event, context) => {
 
     let data;
     try {
-        // Parsear el cuerpo de la solicitud JSON
         data = JSON.parse(event.body);
     } catch (error) {
-        // Si el JSON es inválido
         return {
             statusCode: 400,
             body: JSON.stringify({ message: 'Solicitud inválida. El cuerpo debe ser JSON.' })
         };
     }
 
-    // Extraer los datos del formulario que vienen del frontend
     const {
         Juego,
         ID_Jugador,
@@ -46,7 +42,6 @@ exports.handler = async (event, context) => {
         Numero_Referencia
     } = data;
 
-    // Validar que los campos esenciales existan
     if (!Juego || !ID_Jugador || !Paquete_Diamantes || !Metodo_Pago || !Numero_Referencia) {
         return {
             statusCode: 400,
@@ -54,7 +49,6 @@ exports.handler = async (event, context) => {
         };
     }
 
-    // **IMPORTANTE: Usa variables de entorno para el token y la ID de chat por seguridad**
     const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
@@ -66,43 +60,47 @@ exports.handler = async (event, context) => {
         };
     }
 
-    // Escapar todos los datos variables antes de insertarlos en el mensaje
-    // Convertir a String() por si acaso el valor no es una cadena (ej. números)
-    const escapedJuego = escapeMarkdownV2(Juego);
-    const escapedID_Jugador = escapeMarkdownV2(ID_Jugador);
-    const escapedPaquete_Diamantes = escapeMarkdownV2(Paquete_Diamantes);
-    const escapedPrecio_USD = escapeMarkdownV2(Precio_USD);
-    const escapedPrecio_Final = escapeMarkdownV2(Precio_Final);
-    const escapedMoneda = escapeMarkdownV2(Moneda);
-    const escapedMetodo_Pago = escapeMarkdownV2(Metodo_Pago.toUpperCase());
-    const escapedNumero_Referencia = escapeMarkdownV2(Numero_Referencia);
+    // Escapar solo los datos dinámicos *antes* de construir el mensaje
+    const game = Juego; // No es necesario escapar aquí si lo haremos al final
+    const playerId = ID_Jugador;
+    const packageDiamonds = Paquete_Diamantes;
+    const priceUSD = Precio_USD;
+    const finalPrice = Precio_Final;
+    const currency = Moneda;
+    const paymentMethod = Metodo_Pago.toUpperCase();
+    const referenceNumber = Numero_Referencia;
 
-    // Construir el mensaje para Telegram con los valores escapados
-    // Asegúrate de escapar también los caracteres fijos que son especiales en MarkdownV2,
-    // como los guiones, paréntesis, puntos, etc., si aparecen en texto fijo.
-    const mensaje = `
-🎮 *GamingKings \\- Nueva Solicitud de Recarga* 🎮
+    // Construir el mensaje base sin escapar (solo para variables interpoladas)
+    // Usaremos un escape final sobre todo el mensaje
+    const rawMensaje = `
+🎮 *GamingKings - Nueva Solicitud de Recarga* 🎮
 
-\\---
+---
 *Detalles del Pedido:*
-Juego: *${escapedJuego}*
-ID de Jugador: \`${escapedID_Jugador}\`
-Paquete: *${escapedPaquete_Diamantes}*
-Precio \\(USD\\): \\$${escapedPrecio_USD}
-Precio Final: ${escapedMoneda === 'VES' ? 'Bs\\.' : '\\$'}${escapedPrecio_Final} \\(${escapedMoneda}\\)
-Método de Pago: *${escapedMetodo_Pago}*
-Número de Referencia: \`${escapedNumero_Referencia}\`
-\\---
+Juego: *${game}*
+ID de Jugador: \`${playerId}\`
+Paquete: *${packageDiamonds}*
+Precio (USD): $${priceUSD}
+Precio Final: ${currency === 'VES' ? 'Bs.' : '$'}${finalPrice} (${currency})
+Método de Pago: *${paymentMethod}*
+Número de Referencia: \`${referenceNumber}\`
+---
 
-_Por favor\\, verifica el pago y procesa la recarga\\._
+_Por favor, verifica el pago y procesa la recarga._
     `;
 
+    // AHORA: Escapar el mensaje COMPLETO antes de enviarlo a Telegram
+    const mensajeEscapadoFinal = escapeMarkdownV2(rawMensaje);
+
+    // *** DEPURACIÓN: Imprime el mensaje final en los logs de Netlify ***
+    console.log('Mensaje final a enviar a Telegram (escapado):', mensajeEscapadoFinal);
+    // *******************************************************************
+
     try {
-        // Enviar el mensaje a Telegram
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             chat_id: TELEGRAM_CHAT_ID,
-            text: mensaje,
-            parse_mode: 'MarkdownV2' // Usamos MarkdownV2 para formato de texto
+            text: mensajeEscapadoFinal, // Enviamos el mensaje YA escapado
+            parse_mode: 'MarkdownV2' // Telegram lo interpretará como MarkdownV2
         });
 
         return {
@@ -110,7 +108,6 @@ _Por favor\\, verifica el pago y procesa la recarga\\._
             body: JSON.stringify({ message: 'Solicitud de recarga enviada a Telegram con éxito.' })
         };
     } catch (error) {
-        // Mejorar el log de errores para ver el detalle de Telegram
         console.error('Error al enviar mensaje a Telegram:', error.response ? error.response.data : error.message);
         return {
             statusCode: 500,
